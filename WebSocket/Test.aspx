@@ -14,7 +14,7 @@
     var defaultScheme = "<%: Request.Url.Scheme %>";
     var defaultHost = "<%: Request.Url.Host %>";
     var defaultPort = "<%: Request.Url.Port %>";
-    var defaultPath = '<%: Response.ApplyAppPathModifier("~/EchoWebSocket.ashx") %>';
+    var defaultPath = '<%: Response.ApplyAppPathModifier("~/WebSocket/EchoWebSocket.ashx") %>';
     
     function writeLog(message)
     {
