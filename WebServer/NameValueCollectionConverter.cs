@@ -11,7 +11,9 @@ namespace WebServer
         {
             var collection = value as NameValueCollection;
             if (collection == null)
+            {
                 return;
+            }
 
             writer.Formatting = Formatting.Indented;
             writer.WriteStartObject();
@@ -49,11 +51,20 @@ namespace WebServer
 
         public override bool CanConvert(Type objectType)
         {
-            if (objectType == typeof(NameValueCollection) ||
-                objectType.BaseType == typeof(NameValueCollection) ||
-                objectType.BaseType.BaseType == typeof(NameValueCollection))
+            return IsTypeDerivedFromType(objectType, typeof(NameValueCollection));
+        }
+
+        private bool IsTypeDerivedFromType(Type childType, Type parentType)
+        {
+            Type testType = childType;
+            while (testType != null)
             {
-                return true;
+                if (testType == parentType)
+                {
+                    return true;
+                }
+
+                testType = testType.BaseType;
             }
 
             return false;

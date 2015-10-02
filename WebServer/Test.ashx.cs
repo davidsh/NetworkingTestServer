@@ -9,23 +9,15 @@ using Newtonsoft.Json;
 
 namespace WebServer
 {
-    public class EchoInformation
-    {
-        public NameValueCollection RequestHeaders { get; set; }
-        public string RequestBody { get; set; }
-    }
-
     public class Test : IHttpHandler
     {
         public void ProcessRequest(HttpContext context)
         {
-            var echo = new EchoInformation();
-            echo.RequestHeaders = context.Request.Headers;
-            echo.RequestBody = "foo";
+            RequestInformation info = RequestInformation.Create(context.Request);
 
-            string echoJson = JsonConvert.SerializeObject(echo, new NameValueCollectionConverter());
+            string echoJson = info.SerializeToJson();
 
-            EchoInformation newEcho = (EchoInformation)JsonConvert.DeserializeObject(echoJson, typeof(EchoInformation), new NameValueCollectionConverter());
+            RequestInformation newEcho = RequestInformation.DeSerializeFromJson(echoJson);
             context.Response.ContentType = "text/plain"; //"application/json";
             context.Response.Write(echoJson);
         }
