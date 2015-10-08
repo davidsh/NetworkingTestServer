@@ -72,12 +72,10 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="packages.config" />
-    <Content Include="NoContent.ashx">
-      <BrowseToURL>~/NoContent.ashx</BrowseToURL>
-    </Content>
     <Content Include="WebSocket\Default.aspx" />
     <Content Include="Echo.ashx" />
     <Content Include="Test.ashx" />
+    <Content Include="EmptyContent.ashx" />
     <None Include="Web.Debug.config">
       <DependentUpon>Web.config</DependentUpon>
     </None>
@@ -94,6 +92,9 @@
     <Compile Include="AuthenticationHelper.cs" />
     <Compile Include="Echo.ashx.cs">
       <DependentUpon>Echo.ashx</DependentUpon>
+    </Compile>
+    <Compile Include="EmptyContent.ashx.cs">
+      <DependentUpon>EmptyContent.ashx</DependentUpon>
     </Compile>
     <Compile Include="NameValueCollectionConverter.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
