@@ -31,6 +31,9 @@ namespace WebServer
                 }
             }
 
+            // Add original request method verb as a custom response header.
+            context.Response.Headers.Add("X-HttpRequest-Method", context.Request.HttpMethod);
+
             // Echo back JSON encoded payload.
             RequestInformation info = RequestInformation.Create(context.Request);
             string echoJson = info.SerializeToJson();
