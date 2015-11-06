@@ -45,7 +45,7 @@ namespace WebServer
             string encodedHash = Convert.ToBase64String(hash);
 
             context.Response.Headers.Add("Content-MD5", encodedHash);
-            context.Response.ContentType = "text/plain"; //"application/json";
+            context.Response.ContentType = "application/json";
             context.Response.Write(echoJson);
 
             context.Response.End();

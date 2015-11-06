@@ -9,7 +9,7 @@ namespace WebServer
 {
     public class RequestInformation
     {
-        public string Verb { get; private set; }
+        public string Method { get; private set; }
 
         public string Url { get; private set; }
 
@@ -28,7 +28,7 @@ namespace WebServer
         public static RequestInformation Create(HttpRequest request)
         {
             var info = new RequestInformation();
-            info.Verb = request.HttpMethod;
+            info.Method = request.HttpMethod;
             info.Url = request.RawUrl;
             info.Headers = request.Headers;
 
