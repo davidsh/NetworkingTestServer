@@ -38,7 +38,7 @@ namespace WebServer
                 {
                     context.Response.Headers.Add(
                         "Location",
-                        string.Format("/Redirect.ashx?uri={1}&hops={0}",
+                        string.Format("/Redirect.ashx?uri={0}&hops={1}",
                         redirectUri,
                         hops - 1));
                 }
