@@ -9,10 +9,15 @@ namespace WebServer
         public void ProcessRequest(HttpContext context)
         {
             string statusCodeString = context.Request.QueryString["statuscode"];
+            string statusDescription = context.Request.QueryString["statusdescription"];
             try
             {
                 int statusCode = int.Parse(statusCodeString);
                 context.Response.StatusCode = statusCode;
+                if (!string.IsNullOrEmpty(statusDescription))
+                {
+                    context.Response.StatusDescription = statusDescription;
+                }
             }
             catch (Exception)
             {
