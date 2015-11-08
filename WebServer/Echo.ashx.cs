@@ -1,5 +1,4 @@
 ﻿using System;
-using System.IO;
 using System.Security.Cryptography;
 using System.Text;
 using System.Web;
@@ -39,14 +38,16 @@ namespace WebServer
             string echoJson = info.SerializeToJson();
 
             // Compute MD5 hash to clients can verify the received data.
-            MD5 md5 = MD5.Create();
-            byte[] bytes = Encoding.ASCII.GetBytes(echoJson);
-            byte[] hash = md5.ComputeHash(bytes);
-            string encodedHash = Convert.ToBase64String(hash);
+            using (MD5 md5 = MD5.Create())
+            {
+                byte[] bytes = Encoding.UTF8.GetBytes(echoJson);
+                byte[] hash = md5.ComputeHash(bytes);
+                string encodedHash = Convert.ToBase64String(hash);
 
-            context.Response.Headers.Add("Content-MD5", encodedHash);
-            context.Response.ContentType = "application/json";
-            context.Response.Write(echoJson);
+                context.Response.Headers.Add("Content-MD5", encodedHash);
+                context.Response.ContentType = "application/json";
+                context.Response.Write(echoJson);
+            }
 
             context.Response.End();
         }

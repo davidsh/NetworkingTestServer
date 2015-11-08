@@ -78,6 +78,7 @@
     <Content Include="EmptyContent.ashx" />
     <Content Include="StatusCode.ashx" />
     <Content Include="Redirect.ashx" />
+    <Content Include="VerifyUpload.ashx" />
     <None Include="Web.Debug.config">
       <DependentUpon>Web.config</DependentUpon>
     </None>
@@ -111,6 +112,9 @@
     </Compile>
     <Compile Include="Test.ashx.cs">
       <DependentUpon>Test.ashx</DependentUpon>
+    </Compile>
+    <Compile Include="VerifyUpload.ashx.cs">
+      <DependentUpon>VerifyUpload.ashx</DependentUpon>
     </Compile>
     <Compile Include="WebSocket\Default.aspx.cs">
       <DependentUpon>Default.aspx</DependentUpon>
