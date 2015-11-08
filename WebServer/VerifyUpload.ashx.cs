@@ -10,6 +10,9 @@ namespace WebServer
 
         public void ProcessRequest(HttpContext context)
         {
+            // Report back original request method verb.
+            context.Response.Headers.Add("X-HttpRequest-Method", context.Request.HttpMethod);
+
             // Report back original entity-body related request headers.
             string contentLength = context.Request.Headers["Content-Length"];
             if (!string.IsNullOrEmpty(contentLength))
