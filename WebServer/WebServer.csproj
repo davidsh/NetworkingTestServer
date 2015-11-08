@@ -79,6 +79,8 @@
     <Content Include="StatusCode.ashx" />
     <Content Include="Redirect.ashx" />
     <Content Include="VerifyUpload.ashx" />
+    <Content Include="GZip.ashx" />
+    <Content Include="Deflate.ashx" />
     <None Include="Web.Debug.config">
       <DependentUpon>Web.config</DependentUpon>
     </None>
@@ -95,11 +97,18 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AuthenticationHelper.cs" />
+    <Compile Include="ContentHelper.cs" />
+    <Compile Include="Deflate.ashx.cs">
+      <DependentUpon>Deflate.ashx</DependentUpon>
+    </Compile>
     <Compile Include="Echo.ashx.cs">
       <DependentUpon>Echo.ashx</DependentUpon>
     </Compile>
     <Compile Include="EmptyContent.ashx.cs">
       <DependentUpon>EmptyContent.ashx</DependentUpon>
+    </Compile>
+    <Compile Include="GZip.ashx.cs">
+      <DependentUpon>GZip.ashx</DependentUpon>
     </Compile>
     <Compile Include="NameValueCollectionConverter.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
