@@ -72,7 +72,6 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="packages.config" />
-    <Content Include="WebSocket\Default.aspx" />
     <Content Include="Echo.ashx" />
     <Content Include="Test.ashx" />
     <Content Include="EmptyContent.ashx" />
@@ -81,6 +80,13 @@
     <Content Include="VerifyUpload.ashx" />
     <Content Include="GZip.ashx" />
     <Content Include="Deflate.ashx" />
+    <Content Include="WebSocket\Includes\check.png" />
+    <Content Include="WebSocket\Includes\cross.png" />
+    <Content Include="WebSocket\Includes\echo.js" />
+    <Content Include="WebSocket\Includes\jquery.min.js" />
+    <Content Include="WebSocket\Includes\style.css" />
+    <Content Include="WebSocket\Includes\tls-lock.png" />
+    <Content Include="WebSocket\Default.htm" />
     <None Include="Web.Debug.config">
       <DependentUpon>Web.config</DependentUpon>
     </None>
@@ -124,13 +130,6 @@
     </Compile>
     <Compile Include="VerifyUpload.ashx.cs">
       <DependentUpon>VerifyUpload.ashx</DependentUpon>
-    </Compile>
-    <Compile Include="WebSocket\Default.aspx.cs">
-      <DependentUpon>Default.aspx</DependentUpon>
-      <SubType>ASPXCodeBehind</SubType>
-    </Compile>
-    <Compile Include="WebSocket\Default.aspx.designer.cs">
-      <DependentUpon>Default.aspx</DependentUpon>
     </Compile>
     <Compile Include="WebSocket\EchoWebSocket.ashx.cs">
       <DependentUpon>EchoWebSocket.ashx</DependentUpon>
