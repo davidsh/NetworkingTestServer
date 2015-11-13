@@ -3,6 +3,7 @@ using System.Web;
 using System.Net.WebSockets;
 using System.Text;
 using System.Threading;
+using System.Threading.Tasks;
 
 namespace WebServer
 {
@@ -21,29 +22,7 @@ namespace WebServer
                     return;
                 }
 
-                context.AcceptWebSocketRequest(async wsContext =>
-                {
-                    WebSocket socket = wsContext.WebSocket;
-
-                    // Reflect all headers and cookies
-                    var sb = new StringBuilder();
-                    sb.AppendLine("Headers:");
-
-                    foreach (string header in wsContext.Headers.AllKeys)
-                    {
-                        sb.Append(header);
-                        sb.Append(":");
-                        sb.AppendLine(wsContext.Headers[header]);
-                    }
-
-                    byte[] sendBuffer = Encoding.UTF8.GetBytes(sb.ToString());
-                    await socket.SendAsync(new ArraySegment<byte>(sendBuffer), WebSocketMessageType.Text, true, new CancellationToken());
-
-                    var cts = new CancellationTokenSource();
-                    cts.CancelAfter(2000);
-
-                    await socket.CloseAsync(WebSocketCloseStatus.NormalClosure, "Headers were sent", cts.Token);
-                });
+                context.AcceptWebSocketRequest(ProcessWebSocketRequest);
             }
             catch (Exception ex)
             {
@@ -58,6 +37,30 @@ namespace WebServer
             {
                 return true;
             }
+        }
+
+        private async Task ProcessWebSocketRequest(WebSocketContext wsContext)
+        {
+            WebSocket socket = wsContext.WebSocket;
+
+            // Reflect all headers and cookies
+            var sb = new StringBuilder();
+            sb.AppendLine("Headers:");
+
+            foreach (string header in wsContext.Headers.AllKeys)
+            {
+                sb.Append(header);
+                sb.Append(":");
+                sb.AppendLine(wsContext.Headers[header]);
+            }
+
+            byte[] sendBuffer = Encoding.UTF8.GetBytes(sb.ToString());
+            await socket.SendAsync(new ArraySegment<byte>(sendBuffer), WebSocketMessageType.Text, true, new CancellationToken());
+
+            var cts = new CancellationTokenSource();
+            cts.CancelAfter(2000);
+
+            await socket.CloseAsync(WebSocketCloseStatus.NormalClosure, "Headers were sent", cts.Token);
         }
     }
 }
