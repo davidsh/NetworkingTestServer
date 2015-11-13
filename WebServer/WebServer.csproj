@@ -94,6 +94,7 @@
       <DependentUpon>Web.config</DependentUpon>
     </None>
     <Content Include="WebSocket\EchoWebSocket.ashx" />
+    <Content Include="WebSocket\EchoWebSocketHeaders.ashx" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="index.html" />
@@ -130,6 +131,9 @@
     </Compile>
     <Compile Include="VerifyUpload.ashx.cs">
       <DependentUpon>VerifyUpload.ashx</DependentUpon>
+    </Compile>
+    <Compile Include="WebSocket\EchoWebSocketHeaders.ashx.cs">
+      <DependentUpon>EchoWebSocketHeaders.ashx</DependentUpon>
     </Compile>
     <Compile Include="WebSocket\EchoWebSocket.ashx.cs">
       <DependentUpon>EchoWebSocket.ashx</DependentUpon>

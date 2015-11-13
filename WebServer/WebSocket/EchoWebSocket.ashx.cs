@@ -3,7 +3,7 @@ using System.Net.WebSockets;
 using System.Web;
 using System.Threading;
 
-namespace WebServer.WebSocket
+namespace WebServer
 {
     public class EchoWebSocket : IHttpHandler
     {
