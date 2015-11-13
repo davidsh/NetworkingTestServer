@@ -1,5 +1,3 @@
-  var secureCb;
-  var secureCbLabel;
   var wsUri;
   var consoleLog;
   var connectBut;
@@ -10,6 +8,7 @@
   var sendBut2;
   var sendBut3;
   var clearLogBut;
+  var secureConnection = false;
 
   function echoHandlePageLoad()
   {
@@ -22,14 +21,8 @@
       document.getElementById("noWebSocketSupp").style.display = "block";
     }
 
-    secureCb = document.getElementById("secureCb");
-    secureCb.checked = false;
-    secureCb.onclick = toggleTls;
-    
-    secureCbLabel = document.getElementById("secureCbLabel")
-    
     wsUri = document.getElementById("wsUri");
-    toggleTls();
+    updateUri();
     
     connectBut = document.getElementById("connect");
     connectBut.onclick = doConnect;
@@ -64,21 +57,12 @@
 
   }
 
-  function toggleTls()
+  function updateUri()
   {
     var wsPort = (window.location.port.toString() === "" ? "" : ":" + window.location.port)
     if (wsUri.value === "")
     {
         wsUri.value = "ws://" + window.location.hostname + wsPort + "/WebSocket/EchoWebSocket.ashx";
-    }
-    
-    if (secureCb.checked)
-    {
-      wsUri.value = wsUri.value.replace("ws:", "wss:");
-    }
-    else
-    {
-      wsUri.value = wsUri.value.replace ("wss:", "ws:");
     }
   }
   
@@ -95,20 +79,18 @@
         return;
     }
 
-    // prefer text messages
-    var uri = wsUri.value;
-    if (uri.indexOf("?") == -1)
+    if (wsUri.value.indexOf("wss:") != -1)
     {
-        uri += "?encoding=text";
+        secureConnection = true;
     }
     else
     {
-        uri += "&encoding=text";
+        secureConnection = false;
     }
 
     try
     {
-        websocket = new WebSocket(uri);
+        websocket = new WebSocket(wsUri.value);
         websocket.onopen = function (evt) { onOpen(evt) };
         websocket.onclose = function (evt) { onClose(evt) };
         websocket.onmessage = function (evt) { onMessage(evt) };
@@ -210,14 +192,11 @@
     sendBut1.disabled = !isConnected;
     sendBut2.disabled = !isConnected;
     sendBut3.disabled = !isConnected;
-    secureCb.disabled = isConnected;
     var labelColor = "black";
     if (isConnected)
     {
       labelColor = "#999999";
     }
-     secureCbLabel.style.color = labelColor;
-    
   }
 	
 	function clearLog()
@@ -230,7 +209,7 @@
 	
 	function getSecureTag()
 	{
-		if (secureCb.checked)
+		if (secureConnection)
 		{
 			return '<img src="Includes/tls-lock.png" width="6px" height="9px"> ';
 		}
