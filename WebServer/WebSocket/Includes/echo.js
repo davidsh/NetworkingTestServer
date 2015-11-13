@@ -97,16 +97,27 @@
 
     // prefer text messages
     var uri = wsUri.value;
-    if (uri.indexOf("?") == -1) {
+    if (uri.indexOf("?") == -1)
+    {
         uri += "?encoding=text";
-    } else {
+    }
+    else
+    {
         uri += "&encoding=text";
     }
-    websocket = new WebSocket(uri);
-    websocket.onopen = function(evt) { onOpen(evt) };
-    websocket.onclose = function(evt) { onClose(evt) };
-    websocket.onmessage = function(evt) { onMessage(evt) };
-    websocket.onerror = function(evt) { onError(evt) };
+
+    try
+    {
+        websocket = new WebSocket(uri);
+        websocket.onopen = function (evt) { onOpen(evt) };
+        websocket.onclose = function (evt) { onClose(evt) };
+        websocket.onmessage = function (evt) { onMessage(evt) };
+        websocket.onerror = function (evt) { onError(evt) };
+    }
+    catch (e)
+    {
+        logToConsole('<span style="color: red;">EXCEPTION:</span> ' + e.message);
+    }
   }
   
   function doDisconnect()
