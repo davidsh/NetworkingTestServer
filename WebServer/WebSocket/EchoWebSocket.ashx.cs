@@ -103,11 +103,11 @@ namespace WebServer
                             string receivedMessage = Encoding.UTF8.GetString(receiveBuffer, 0, offset);
                             if (receivedMessage == ".close")
                             {
-                                await socket.CloseAsync(WebSocketCloseStatus.NormalClosure, "Goodbye.", CancellationToken.None);
+                                await socket.CloseAsync(WebSocketCloseStatus.NormalClosure, receivedMessage, CancellationToken.None);
                             }
                             if (receivedMessage == ".shutdown")
                             {
-                                await socket.CloseOutputAsync(WebSocketCloseStatus.NormalClosure, "Goodbye.", CancellationToken.None);
+                                await socket.CloseOutputAsync(WebSocketCloseStatus.NormalClosure, receivedMessage, CancellationToken.None);
                             }
                             else if (receivedMessage == ".abort")
                             {
