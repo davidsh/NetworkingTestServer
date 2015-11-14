@@ -72,10 +72,7 @@ namespace WebServer
                             }
                         }
 
-                        await Task.Delay(500);
-                        socket.Dispose();
-
-                        break;
+                        continue;
                     }
 
                     // Keep reading until we get an entire message.
@@ -157,10 +154,6 @@ namespace WebServer
                         e.Message,
                         CancellationToken.None).Wait(100);
                 }
-            }
-            finally
-            {
-                socket.Dispose();
             }
         }
     }
