@@ -72,6 +72,7 @@ namespace WebServer
                             }
                         }
 
+                        await Task.Delay(500);
                         socket.Dispose();
 
                         break;
