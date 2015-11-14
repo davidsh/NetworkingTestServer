@@ -72,6 +72,8 @@ namespace WebServer
                             }
                         }
 
+                        socket.Dispose();
+
                         break;
                     }
 
