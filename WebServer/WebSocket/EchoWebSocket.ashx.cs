@@ -58,16 +58,19 @@ namespace WebServer
 
                     if (receiveResult.MessageType == WebSocketMessageType.Close)
                     {
-                        if (receiveResult.CloseStatus == WebSocketCloseStatus.Empty)
+                        if (socket.State != WebSocketState.CloseSent)
                         {
-                            await socket.CloseAsync(WebSocketCloseStatus.Empty, null, CancellationToken.None);
-                        }
-                        else
-                        {
-                            await socket.CloseAsync(
-                                receiveResult.CloseStatus.GetValueOrDefault(),
-                                receiveResult.CloseStatusDescription,
-                                CancellationToken.None);
+                            if (receiveResult.CloseStatus == WebSocketCloseStatus.Empty)
+                            {
+                                await socket.CloseAsync(WebSocketCloseStatus.Empty, null, CancellationToken.None);
+                            }
+                            else
+                            {
+                                await socket.CloseAsync(
+                                    receiveResult.CloseStatus.GetValueOrDefault(),
+                                    receiveResult.CloseStatusDescription,
+                                    CancellationToken.None);
+                            }
                         }
 
                         return;
