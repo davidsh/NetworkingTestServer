@@ -53,6 +53,7 @@ namespace WebServer
                 while (socket.State == WebSocketState.Open)
                 {
                     var receiveResult = await socket.ReceiveAsync(new ArraySegment<byte>(receiveBuffer), CancellationToken.None);
+                    WebSocketMessageType messageType;
 
                     if (receiveResult.MessageType == WebSocketMessageType.Close)
                     {
@@ -71,6 +72,7 @@ namespace WebServer
                     }
 
                     // Keep reading until we get an entire message.
+                    messageType = receiveResult.MessageType;
                     int offset = receiveResult.Count;
                     while (receiveResult.EndOfMessage == false)
                     {
@@ -98,7 +100,7 @@ namespace WebServer
                     {
                         bool sendMessage = false;
 
-                        if (receiveResult.MessageType == WebSocketMessageType.Text)
+                        if (messageType == WebSocketMessageType.Text)
                         {
                             string receivedMessage = Encoding.UTF8.GetString(receiveBuffer, 0, offset);
                             if (receivedMessage == ".close")
@@ -127,10 +129,9 @@ namespace WebServer
                         {
                             await socket.SendAsync(
                                     new ArraySegment<byte>(receiveBuffer, 0, offset),
-                                    receiveResult.MessageType,
+                                    messageType,
                                     true,
                                     CancellationToken.None);
-
                         }
                     }
                 }
