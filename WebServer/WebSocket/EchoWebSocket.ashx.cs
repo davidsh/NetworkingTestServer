@@ -50,8 +50,7 @@ namespace WebServer
 
             try
             {
-                // Stay in loop while websocket is not fully closed or aborted
-                while (socket.State != WebSocketState.Closed && socket.State != WebSocketState.Aborted)
+                while (true)
                 {
                     var receiveResult = await socket.ReceiveAsync(new ArraySegment<byte>(receiveBuffer), CancellationToken.None);
                     WebSocketMessageType messageType;
@@ -62,18 +61,18 @@ namespace WebServer
                         {
                             if (receiveResult.CloseStatus == WebSocketCloseStatus.Empty)
                             {
-                                await socket.CloseAsync(WebSocketCloseStatus.Empty, null, CancellationToken.None);
+                                await socket.CloseOutputAsync(WebSocketCloseStatus.Empty, null, CancellationToken.None);
                             }
                             else
                             {
-                                await socket.CloseAsync(
+                                await socket.CloseOutputAsync(
                                     receiveResult.CloseStatus.GetValueOrDefault(),
                                     receiveResult.CloseStatusDescription,
                                     CancellationToken.None);
                             }
                         }
 
-                        return;
+                        break;
                     }
 
                     // Keep reading until we get an entire message.
@@ -150,11 +149,15 @@ namespace WebServer
             {
                 if (socket.State == WebSocketState.Open)
                 {
-                    socket.CloseAsync(
+                    socket.CloseOutputAsync(
                         WebSocketCloseStatus.InternalServerError,
                         e.Message,
                         CancellationToken.None).Wait(100);
                 }
+            }
+            finally
+            {
+                socket.Dispose();
             }
         }
     }
