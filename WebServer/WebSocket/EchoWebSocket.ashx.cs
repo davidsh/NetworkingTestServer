@@ -72,7 +72,7 @@ namespace WebServer
                             }
                         }
 
-                        continue;
+                        break;
                     }
 
                     // Keep reading until we get an entire message.
