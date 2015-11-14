@@ -48,116 +48,96 @@ namespace WebServer
             var throwAwayBuffer = new byte[MaxBufferSize];
             var socket = wsContext.WebSocket;
 
-            try
+            // Stay in loop while websocket is open
+            while (socket.State == WebSocketState.Open || socket.State == WebSocketState.CloseSent)
             {
-                while (true)
+                var receiveResult = await socket.ReceiveAsync(new ArraySegment<byte>(receiveBuffer), CancellationToken.None);
+                WebSocketMessageType messageType;
+
+                if (receiveResult.MessageType == WebSocketMessageType.Close)
                 {
-                    var receiveResult = await socket.ReceiveAsync(new ArraySegment<byte>(receiveBuffer), CancellationToken.None);
-                    WebSocketMessageType messageType;
-
-                    if (receiveResult.MessageType == WebSocketMessageType.Close)
+                    if (receiveResult.CloseStatus == WebSocketCloseStatus.Empty)
                     {
-                        if (socket.State != WebSocketState.CloseSent)
-                        {
-                            if (receiveResult.CloseStatus == WebSocketCloseStatus.Empty)
-                            {
-                                await socket.CloseOutputAsync(WebSocketCloseStatus.Empty, null, CancellationToken.None);
-                            }
-                            else
-                            {
-                                await socket.CloseOutputAsync(
-                                    receiveResult.CloseStatus.GetValueOrDefault(),
-                                    receiveResult.CloseStatusDescription,
-                                    CancellationToken.None);
-                            }
-                        }
-
-                        break;
-                    }
-
-                    // Keep reading until we get an entire message.
-                    messageType = receiveResult.MessageType;
-                    int offset = receiveResult.Count;
-                    while (receiveResult.EndOfMessage == false)
-                    {
-                        if (offset < MaxBufferSize)
-                        {
-                            receiveResult = await socket.ReceiveAsync(new ArraySegment<byte>(receiveBuffer, offset, MaxBufferSize - offset), CancellationToken.None);
-                        }
-                        else
-                        {
-                            receiveResult = await socket.ReceiveAsync(new ArraySegment<byte>(throwAwayBuffer), CancellationToken.None);
-                        }
-
-                        offset += receiveResult.Count;
-                    }
-
-                    // Close socket if the message was too big.
-                    if (offset > MaxBufferSize)
-                    {
-                        await socket.CloseAsync(
-                            WebSocketCloseStatus.MessageTooBig,
-                            String.Format("{0}: {1} > {2}", WebSocketCloseStatus.MessageTooBig.ToString(), offset, MaxBufferSize),
-                            CancellationToken.None);
+                        await socket.CloseAsync(WebSocketCloseStatus.Empty, null, CancellationToken.None);
                     }
                     else
                     {
-                        bool sendMessage = false;
+                        await socket.CloseAsync(
+                            receiveResult.CloseStatus.GetValueOrDefault(),
+                            receiveResult.CloseStatusDescription,
+                            CancellationToken.None);
+                    }
 
-                        if (messageType == WebSocketMessageType.Text)
+                    break;
+                }
+
+                // Keep reading until we get an entire message.
+                messageType = receiveResult.MessageType;
+                int offset = receiveResult.Count;
+                while (receiveResult.EndOfMessage == false)
+                {
+                    if (offset < MaxBufferSize)
+                    {
+                        receiveResult = await socket.ReceiveAsync(new ArraySegment<byte>(receiveBuffer, offset, MaxBufferSize - offset), CancellationToken.None);
+                    }
+                    else
+                    {
+                        receiveResult = await socket.ReceiveAsync(new ArraySegment<byte>(throwAwayBuffer), CancellationToken.None);
+                    }
+
+                    offset += receiveResult.Count;
+                }
+
+                // Close socket if the message was too big.
+                if (offset > MaxBufferSize)
+                {
+                    await socket.CloseAsync(
+                        WebSocketCloseStatus.MessageTooBig,
+                        String.Format("{0}: {1} > {2}", WebSocketCloseStatus.MessageTooBig.ToString(), offset, MaxBufferSize),
+                        CancellationToken.None);
+                }
+                else
+                {
+                    bool sendMessage = false;
+
+                    if (messageType == WebSocketMessageType.Text)
+                    {
+                        string receivedMessage = Encoding.UTF8.GetString(receiveBuffer, 0, offset);
+                        if (receivedMessage == ".close")
                         {
-                            string receivedMessage = Encoding.UTF8.GetString(receiveBuffer, 0, offset);
-                            if (receivedMessage == ".close")
-                            {
-                                await socket.SendAsync(
-                                        new ArraySegment<byte>(Encoding.UTF8.GetBytes(receivedMessage)),
-                                        WebSocketMessageType.Text,
-                                        true,
-                                        CancellationToken.None);
-                                await socket.CloseAsync(WebSocketCloseStatus.NormalClosure, receivedMessage, CancellationToken.None);
-                            }
-                            if (receivedMessage == ".shutdown")
-                            {
-                                await socket.CloseOutputAsync(WebSocketCloseStatus.NormalClosure, receivedMessage, CancellationToken.None);
-                            }
-                            else if (receivedMessage == ".abort")
-                            {
-                                socket.Abort();
-                            }
-                            else if (receivedMessage == ".delay5sec")
-                            {
-                                await Task.Delay(5000);
-                            }
-                            else
-                            {
-                                sendMessage = true;
-                            }
+                            await socket.CloseAsync(WebSocketCloseStatus.NormalClosure, receivedMessage, CancellationToken.None);
+                        }
+                        if (receivedMessage == ".shutdown")
+                        {
+                            await socket.CloseOutputAsync(WebSocketCloseStatus.NormalClosure, receivedMessage, CancellationToken.None);
+                        }
+                        else if (receivedMessage == ".abort")
+                        {
+                            socket.Abort();
+                        }
+                        else if (receivedMessage == ".delay5sec")
+                        {
+                            await Task.Delay(5000);
                         }
                         else
                         {
-                            Debug.Assert(messageType == WebSocketMessageType.Binary);
                             sendMessage = true;
                         }
-
-                        if (sendMessage && (socket.State == WebSocketState.Open))
-                        {
-                            await socket.SendAsync(
-                                    new ArraySegment<byte>(receiveBuffer, 0, offset),
-                                    messageType,
-                                    true,
-                                    CancellationToken.None);
-                        }
                     }
-                }
-            }
-            catch (Exception e)
-            {
-                if (socket.State == WebSocketState.Open)
-                {
-                    socket.CloseOutputAsync(
-                        WebSocketCloseStatus.InternalServerError,
-                        e.Message,
-                        CancellationToken.None).Wait(100);
+                    else
+                    {
+                        Debug.Assert(messageType == WebSocketMessageType.Binary);
+                        sendMessage = true;
+                    }
+
+                    if (sendMessage && (socket.State == WebSocketState.Open))
+                    {
+                        await socket.SendAsync(
+                                new ArraySegment<byte>(receiveBuffer, 0, offset),
+                                messageType,
+                                true,
+                                CancellationToken.None);
+                    }
                 }
             }
         }
