@@ -50,8 +50,8 @@ namespace WebServer
 
             try
             {
-                // Stay in loop while websocket is open
-                while (socket.State == WebSocketState.Open)
+                // Stay in loop while websocket is not fully closed or aborted
+                while (socket.State != WebSocketState.Closed && socket.State != WebSocketState.Aborted)
                 {
                     var receiveResult = await socket.ReceiveAsync(new ArraySegment<byte>(receiveBuffer), CancellationToken.None);
                     WebSocketMessageType messageType;
@@ -69,6 +69,7 @@ namespace WebServer
                                 receiveResult.CloseStatusDescription,
                                 CancellationToken.None);
                         }
+
                         return;
                     }
 
