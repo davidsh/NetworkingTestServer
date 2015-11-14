@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Net.WebSockets;
 using System.Web;
 using System.Text;
@@ -123,6 +124,11 @@ namespace WebServer
                             {
                                 sendMessage = true;
                             }
+                        }
+                        else
+                        {
+                            Debug.Assert(messageType == WebSocketMessageType.Binary);
+                            sendMessage = true;
                         }
 
                         if (sendMessage && (socket.State == WebSocketState.Open))
