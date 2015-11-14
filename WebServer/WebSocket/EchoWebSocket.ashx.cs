@@ -109,6 +109,11 @@ namespace WebServer
                             string receivedMessage = Encoding.UTF8.GetString(receiveBuffer, 0, offset);
                             if (receivedMessage == ".close")
                             {
+                                await socket.SendAsync(
+                                        new ArraySegment<byte>(Encoding.UTF8.GetBytes(receivedMessage)),
+                                        WebSocketMessageType.Text,
+                                        true,
+                                        CancellationToken.None);
                                 await socket.CloseAsync(WebSocketCloseStatus.NormalClosure, receivedMessage, CancellationToken.None);
                             }
                             if (receivedMessage == ".shutdown")
