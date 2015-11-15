@@ -14,6 +14,11 @@ namespace WebServer
 
         public void ProcessRequest(HttpContext context)
         {
+            if (context.Request.Url.Query == "?delay10sec")
+            {
+                Thread.Sleep(10000);
+            }
+
             try
             {
                 if (!context.IsWebSocketRequest)
