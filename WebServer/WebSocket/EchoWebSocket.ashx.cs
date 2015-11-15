@@ -57,8 +57,6 @@ namespace WebServer
             while (socket.State == WebSocketState.Open || socket.State == WebSocketState.CloseSent)
             {
                 var receiveResult = await socket.ReceiveAsync(new ArraySegment<byte>(receiveBuffer), CancellationToken.None);
-                WebSocketMessageType messageType;
-
                 if (receiveResult.MessageType == WebSocketMessageType.Close)
                 {
                     if (receiveResult.CloseStatus == WebSocketCloseStatus.Empty)
@@ -76,36 +74,44 @@ namespace WebServer
                     break;
                 }
 
-                // Keep reading until we get an entire message.
-                messageType = receiveResult.MessageType;
-                int offset = receiveResult.Count;
-                while (receiveResult.EndOfMessage == false)
+                if (receiveResult.MessageType == WebSocketMessageType.Binary)
                 {
-                    if (offset < MaxBufferSize)
+                    // Immediately output binary fragments.
+                    ArraySegment<byte> outputBuffer = new ArraySegment<byte>(receiveBuffer, 0, receiveResult.Count);
+
+                    await socket.SendAsync(outputBuffer, WebSocketMessageType.Binary, receiveResult.EndOfMessage, CancellationToken.None);
+                }
+                else if (receiveResult.MessageType == WebSocketMessageType.Text)
+                {
+                    // Keep reading until we get an entire message.
+                    int offset = receiveResult.Count;
+                    while (receiveResult.EndOfMessage == false)
                     {
-                        receiveResult = await socket.ReceiveAsync(new ArraySegment<byte>(receiveBuffer, offset, MaxBufferSize - offset), CancellationToken.None);
+                        if (offset < MaxBufferSize)
+                        {
+                            receiveResult = await socket.ReceiveAsync(
+                                new ArraySegment<byte>(receiveBuffer, offset, MaxBufferSize - offset),
+                                CancellationToken.None);
+                        }
+                        else
+                        {
+                            receiveResult = await socket.ReceiveAsync(
+                                new ArraySegment<byte>(throwAwayBuffer),
+                                CancellationToken.None);
+                        }
+
+                        offset += receiveResult.Count;
+                    }
+
+                    // Close socket if the message was too big.
+                    if (offset > MaxBufferSize)
+                    {
+                        await socket.CloseAsync(
+                            WebSocketCloseStatus.MessageTooBig,
+                            String.Format("{0}: {1} > {2}", WebSocketCloseStatus.MessageTooBig.ToString(), offset, MaxBufferSize),
+                            CancellationToken.None);
                     }
                     else
-                    {
-                        receiveResult = await socket.ReceiveAsync(new ArraySegment<byte>(throwAwayBuffer), CancellationToken.None);
-                    }
-
-                    offset += receiveResult.Count;
-                }
-
-                // Close socket if the message was too big.
-                if (offset > MaxBufferSize)
-                {
-                    await socket.CloseAsync(
-                        WebSocketCloseStatus.MessageTooBig,
-                        String.Format("{0}: {1} > {2}", WebSocketCloseStatus.MessageTooBig.ToString(), offset, MaxBufferSize),
-                        CancellationToken.None);
-                }
-                else
-                {
-                    bool sendMessage = false;
-
-                    if (messageType == WebSocketMessageType.Text)
                     {
                         string receivedMessage = Encoding.UTF8.GetString(receiveBuffer, 0, offset);
                         if (receivedMessage == ".close")
@@ -124,24 +130,14 @@ namespace WebServer
                         {
                             await Task.Delay(5000);
                         }
-                        else
+                        else if (socket.State == WebSocketState.Open)
                         {
-                            sendMessage = true;
+                            await socket.SendAsync(
+                                    new ArraySegment<byte>(receiveBuffer, 0, offset),
+                                    WebSocketMessageType.Text,
+                                    true,
+                                    CancellationToken.None);
                         }
-                    }
-                    else
-                    {
-                        Debug.Assert(messageType == WebSocketMessageType.Binary);
-                        sendMessage = true;
-                    }
-
-                    if (sendMessage && (socket.State == WebSocketState.Open))
-                    {
-                        await socket.SendAsync(
-                                new ArraySegment<byte>(receiveBuffer, 0, offset),
-                                messageType,
-                                true,
-                                CancellationToken.None);
                     }
                 }
             }
