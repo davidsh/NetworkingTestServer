@@ -9,6 +9,8 @@ namespace WebServer
 {
     public class EchoWebSocketHeaders : IHttpHandler
     {
+        private const int MaxBufferSize = 1024;
+
         public void ProcessRequest(HttpContext context)
         {
             try
@@ -42,6 +44,7 @@ namespace WebServer
         private async Task ProcessWebSocketRequest(WebSocketContext wsContext)
         {
             WebSocket socket = wsContext.WebSocket;
+            var receiveBuffer = new byte[MaxBufferSize];
 
             // Reflect all headers and cookies
             var sb = new StringBuilder();
@@ -57,10 +60,27 @@ namespace WebServer
             byte[] sendBuffer = Encoding.UTF8.GetBytes(sb.ToString());
             await socket.SendAsync(new ArraySegment<byte>(sendBuffer), WebSocketMessageType.Text, true, new CancellationToken());
 
-            var cts = new CancellationTokenSource();
-            cts.CancelAfter(2000);
+            // Stay in loop while websocket is open
+            while (socket.State == WebSocketState.Open || socket.State == WebSocketState.CloseSent)
+            {
+                var receiveResult = await socket.ReceiveAsync(new ArraySegment<byte>(receiveBuffer), CancellationToken.None);
+                if (receiveResult.MessageType == WebSocketMessageType.Close)
+                {
+                    if (receiveResult.CloseStatus == WebSocketCloseStatus.Empty)
+                    {
+                        await socket.CloseAsync(WebSocketCloseStatus.Empty, null, CancellationToken.None);
+                    }
+                    else
+                    {
+                        await socket.CloseAsync(
+                            receiveResult.CloseStatus.GetValueOrDefault(),
+                            receiveResult.CloseStatusDescription,
+                            CancellationToken.None);
+                    }
 
-            await socket.CloseAsync(WebSocketCloseStatus.NormalClosure, "Headers were sent", cts.Token);
+                    continue;
+                }
+            }
         }
     }
 }

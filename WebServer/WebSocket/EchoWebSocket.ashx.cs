@@ -49,9 +49,9 @@ namespace WebServer
 
         private async Task ProcessWebSocketRequest(WebSocketContext wsContext)
         {
+            WebSocket socket = wsContext.WebSocket;
             var receiveBuffer = new byte[MaxBufferSize];
             var throwAwayBuffer = new byte[MaxBufferSize];
-            var socket = wsContext.WebSocket;
 
             // Stay in loop while websocket is open
             while (socket.State == WebSocketState.Open || socket.State == WebSocketState.CloseSent)
