@@ -71,74 +71,77 @@ namespace WebServer
                             CancellationToken.None);
                     }
 
-                    break;
+                    continue;
                 }
 
-                if (receiveResult.MessageType == WebSocketMessageType.Binary)
+                // Keep reading until we get an entire message.
+                int offset = receiveResult.Count;
+                while (receiveResult.EndOfMessage == false)
                 {
-                    // Immediately output binary fragments.
-                    ArraySegment<byte> outputBuffer = new ArraySegment<byte>(receiveBuffer, 0, receiveResult.Count);
-
-                    await socket.SendAsync(outputBuffer, WebSocketMessageType.Binary, receiveResult.EndOfMessage, CancellationToken.None);
-                }
-                else if (receiveResult.MessageType == WebSocketMessageType.Text)
-                {
-                    // Keep reading until we get an entire message.
-                    int offset = receiveResult.Count;
-                    while (receiveResult.EndOfMessage == false)
+                    if (offset < MaxBufferSize)
                     {
-                        if (offset < MaxBufferSize)
-                        {
-                            receiveResult = await socket.ReceiveAsync(
-                                new ArraySegment<byte>(receiveBuffer, offset, MaxBufferSize - offset),
-                                CancellationToken.None);
-                        }
-                        else
-                        {
-                            receiveResult = await socket.ReceiveAsync(
-                                new ArraySegment<byte>(throwAwayBuffer),
-                                CancellationToken.None);
-                        }
-
-                        offset += receiveResult.Count;
-                    }
-
-                    // Close socket if the message was too big.
-                    if (offset > MaxBufferSize)
-                    {
-                        await socket.CloseAsync(
-                            WebSocketCloseStatus.MessageTooBig,
-                            String.Format("{0}: {1} > {2}", WebSocketCloseStatus.MessageTooBig.ToString(), offset, MaxBufferSize),
+                        receiveResult = await socket.ReceiveAsync(
+                            new ArraySegment<byte>(receiveBuffer, offset, MaxBufferSize - offset),
                             CancellationToken.None);
                     }
                     else
                     {
-                        string receivedMessage = Encoding.UTF8.GetString(receiveBuffer, 0, offset);
-                        if (receivedMessage == ".close")
-                        {
-                            await socket.CloseAsync(WebSocketCloseStatus.NormalClosure, receivedMessage, CancellationToken.None);
-                        }
-                        if (receivedMessage == ".shutdown")
-                        {
-                            await socket.CloseOutputAsync(WebSocketCloseStatus.NormalClosure, receivedMessage, CancellationToken.None);
-                        }
-                        else if (receivedMessage == ".abort")
-                        {
-                            socket.Abort();
-                        }
-                        else if (receivedMessage == ".delay5sec")
-                        {
-                            await Task.Delay(5000);
-                        }
-                        else if (socket.State == WebSocketState.Open)
-                        {
-                            await socket.SendAsync(
-                                    new ArraySegment<byte>(receiveBuffer, 0, offset),
-                                    WebSocketMessageType.Text,
-                                    true,
-                                    CancellationToken.None);
-                        }
+                        receiveResult = await socket.ReceiveAsync(
+                            new ArraySegment<byte>(throwAwayBuffer),
+                            CancellationToken.None);
                     }
+
+                    offset += receiveResult.Count;
+                }
+
+                // Close socket if the message was too big.
+                if (offset > MaxBufferSize)
+                {
+                    await socket.CloseAsync(
+                        WebSocketCloseStatus.MessageTooBig,
+                        String.Format("{0}: {1} > {2}", WebSocketCloseStatus.MessageTooBig.ToString(), offset, MaxBufferSize),
+                        CancellationToken.None);
+
+                    continue;
+                }
+
+                bool sendMessage = false;
+                if (receiveResult.MessageType == WebSocketMessageType.Text)
+                {
+                    string receivedMessage = Encoding.UTF8.GetString(receiveBuffer, 0, offset);
+                    if (receivedMessage == ".close")
+                    {
+                        await socket.CloseAsync(WebSocketCloseStatus.NormalClosure, receivedMessage, CancellationToken.None);
+                    }
+                    if (receivedMessage == ".shutdown")
+                    {
+                        await socket.CloseOutputAsync(WebSocketCloseStatus.NormalClosure, receivedMessage, CancellationToken.None);
+                    }
+                    else if (receivedMessage == ".abort")
+                    {
+                        socket.Abort();
+                    }
+                    else if (receivedMessage == ".delay5sec")
+                    {
+                        await Task.Delay(5000);
+                    }
+                    else if (socket.State == WebSocketState.Open)
+                    {
+                        sendMessage = true;
+                    }
+                }
+                else
+                {
+                    sendMessage = true;
+                }
+
+                if (sendMessage)
+                {
+                    await socket.SendAsync(
+                            new ArraySegment<byte>(receiveBuffer, 0, offset),
+                            receiveResult.MessageType,
+                            true,
+                            CancellationToken.None);
                 }
             }
         }
