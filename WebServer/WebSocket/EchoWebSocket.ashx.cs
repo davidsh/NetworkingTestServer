@@ -1,7 +1,7 @@
 ﻿using System;
-using System.Diagnostics;
 using System.Net.WebSockets;
 using System.Web;
+using System.Web.WebSockets;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -14,6 +14,8 @@ namespace WebServer
 
         public void ProcessRequest(HttpContext context)
         {
+            string subProtocol = context.Request.QueryString["subprotocol"];
+
             if (context.Request.Url.Query == "?delay10sec")
             {
                 Thread.Sleep(10000);
@@ -30,7 +32,17 @@ namespace WebServer
                     return;
                 }
 
-                context.AcceptWebSocketRequest(ProcessWebSocketRequest);
+                if (!string.IsNullOrEmpty(subProtocol))
+                {
+                    var wsOptions = new AspNetWebSocketOptions();
+                    wsOptions.SubProtocol = subProtocol;
+
+                    context.AcceptWebSocketRequest(ProcessWebSocketRequest, wsOptions);
+                }
+                else
+                {
+                    context.AcceptWebSocketRequest(ProcessWebSocketRequest);
+                }
             }
             catch (Exception ex)
             {
