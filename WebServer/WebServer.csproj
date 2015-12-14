@@ -105,6 +105,7 @@
   <ItemGroup>
     <Compile Include="AuthenticationHelper.cs" />
     <Compile Include="ContentHelper.cs" />
+    <Compile Include="RequestHelper.cs" />
     <Compile Include="Deflate.ashx.cs">
       <DependentUpon>Deflate.ashx</DependentUpon>
     </Compile>

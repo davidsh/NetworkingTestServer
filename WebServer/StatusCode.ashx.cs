@@ -5,7 +5,6 @@ namespace WebServer
 {
     public class StatusCode : IHttpHandler
     {
-
         public void ProcessRequest(HttpContext context)
         {
             string statusCodeString = context.Request.QueryString["statuscode"];

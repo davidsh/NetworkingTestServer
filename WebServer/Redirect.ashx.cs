@@ -8,12 +8,13 @@ namespace WebServer
     /// </summary>
     public class Redirect : IHttpHandler
     {
-
         public void ProcessRequest(HttpContext context)
         {
             string redirectUri = context.Request.QueryString["uri"];
             string hopsString = context.Request.QueryString["hops"];
             int hops = 1;
+
+            RequestHelper.AddResponseCookies(context);
 
             try
             {

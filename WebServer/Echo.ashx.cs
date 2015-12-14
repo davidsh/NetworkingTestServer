@@ -9,25 +9,12 @@ namespace WebServer
     {
         public void ProcessRequest(HttpContext context)
         {
+            RequestHelper.AddResponseCookies(context);
+
             if (!AuthenticationHelper.HandleAuthentication(context))
             {
                 context.Response.End();
                 return;
-            }
-
-            // Iterate thru the request headers.
-            // Turn all 'X-SetCookie' request headers into response cookies.
-            string headerName;
-            string headerValue;
-            for (int i = 0; i < context.Request.Headers.Count; i++)
-            {
-                headerName = context.Request.Headers.Keys[i];
-                headerValue = context.Request.Headers[i];
-
-                if (string.Compare(headerName, "X-SetCookie", StringComparison.OrdinalIgnoreCase) == 0)
-                {
-                    context.Response.Headers.Add("Set-Cookie", headerValue);
-                }
             }
 
             // Add original request method verb as a custom response header.
