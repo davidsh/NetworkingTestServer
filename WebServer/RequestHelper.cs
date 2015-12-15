@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Net;
 using System.Web;
 
 namespace WebServer
@@ -16,11 +17,25 @@ namespace WebServer
                 headerName = context.Request.Headers.Keys[i];
                 headerValue = context.Request.Headers[i];
 
-                if (string.Compare(headerName, "X-SetCookie", StringComparison.OrdinalIgnoreCase) == 0)
+                if (string.Equals(headerName, "X-SetCookie", StringComparison.OrdinalIgnoreCase))
                 {
                     context.Response.Headers.Add("Set-Cookie", headerValue);
                 }
             }
+        }
+
+        public static CookieCollection GetRequestCookies(HttpRequest request)
+        {
+            var cookieCollection = new CookieCollection();
+            HttpCookieCollection cookies = request.Cookies;
+
+            for (int i = 0; i < cookies.Count; i++)
+            {
+                var cookie = new Cookie(cookies[i].Name, cookies[i].Value);
+                cookieCollection.Add(cookie);
+            }
+
+            return cookieCollection;
         }
     }
 }

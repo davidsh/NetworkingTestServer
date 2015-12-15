@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Specialized;
 using System.IO;
+using System.Net;
 using System.Web;
 
 using Newtonsoft.Json;
@@ -14,6 +15,8 @@ namespace WebServer
         public string Url { get; private set; }
 
         public NameValueCollection Headers { get; private set; }
+
+        public NameValueCollection Cookies { get; private set; }
 
         public string BodyContent { get; private set; }
 
@@ -31,6 +34,14 @@ namespace WebServer
             info.Method = request.HttpMethod;
             info.Url = request.RawUrl;
             info.Headers = request.Headers;
+
+            var cookies = new NameValueCollection();
+            CookieCollection cookieCollection = RequestHelper.GetRequestCookies(request);
+            foreach (Cookie cookie in cookieCollection)
+            {
+                cookies.Add(cookie.Name, cookie.Value);
+            }
+            info.Cookies = cookies;
 
             Stream stream = request.GetBufferedInputStream();
             using (var reader = new StreamReader(stream))
